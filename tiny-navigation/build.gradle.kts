@@ -79,8 +79,8 @@ publishing {
 
             pom {
                 name.set("Tiny Navigation")
-                description.set("A description of your library")
-                url.set("https://yourwebsite.com")
+                description.set("A small KMP navigation library")
+                url.set("https://github.com/pererikbergman/tiny-suite")
 
                 licenses {
                     license {
@@ -91,9 +91,9 @@ publishing {
 
                 developers {
                     developer {
-                        id.set("yourID")
-                        name.set("Your Name")
-                        email.set("your@email.com")
+                        id.set("pererikbergman")
+                        name.set("Per-Erik Bergman")
+                        email.set("bergman@uncle.se")
                     }
                 }
 

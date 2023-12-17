@@ -1,15 +1,22 @@
+File: `settings.gradle.kts`
 
 ```kotlin
 dependencyResolutionManagement {
     repositories {
-    google()
-    mavenCentral()
+        google()
+        mavenCentral()
         maven {
             url = uri("https://maven.pkg.github.com/pererikbergman/github-packages")
         }
+        
+        // or ...
+
+        maven("https://maven.pkg.github.com/pererikbergman/github-packages")
     }
 }
 ```
+
+File: `shared/build.gradle.kts`
 
 ```kotlin
 kotlin {
@@ -24,6 +31,8 @@ kotlin {
     }
 }
 ```
+
+File: `Navigation.kt`
 
 ```kotlin
 sealed class Screen(val route: String) {
