@@ -53,44 +53,6 @@ kotlin {
             implementation(libs.kotlin.test)
         }
     }
-
-    publishing {
-        publications {
-            create<MavenPublication>("maven") {
-                groupId = "com.rakangsoftware.tiny"
-                artifactId = "navigation"
-                version = "0.0.1"
-
-                from(components["kotlin"]) // Adjust this based on your project's components
-
-                pom {
-                    name.set("Tiny Navigation")
-                    description.set("A description of your library")
-                    url.set("https://yourwebsite.com")
-
-                    licenses {
-                        license {
-                            name.set("The Apache License, Version 2.0")
-                            url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
-                        }
-                    }
-
-                    developers {
-                        developer {
-                            id.set("yourID")
-                            name.set("Your Name")
-                            email.set("your@email.com")
-                        }
-                    }
-
-                    scm {
-                        url.set("https://github.com/yourrepo")
-                    }
-                }
-            }
-        }
-    }
-
 }
 
 android {
@@ -103,5 +65,54 @@ android {
     compileSdk = 34
     defaultConfig {
         minSdk = 24
+    }
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = "com.rakangsoftware.tiny"
+            artifactId = "navigation"
+            version = "0.0.1"
+
+            from(components["kotlin"]) // Adjust this based on your project's components
+
+            pom {
+                name.set("Tiny Navigation")
+                description.set("A description of your library")
+                url.set("https://yourwebsite.com")
+
+                licenses {
+                    license {
+                        name.set("The Apache License, Version 2.0")
+                        url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                    }
+                }
+
+                developers {
+                    developer {
+                        id.set("yourID")
+                        name.set("Your Name")
+                        email.set("your@email.com")
+                    }
+                }
+
+                scm {
+                    url.set("https://github.com/pererikbergman/tiny-suite")
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/pererikbergman/tiny-suite")
+            credentials {
+                username = project.findProperty("GPR_USER") as String? ?: System.getenv("GPR_USER")
+                password =
+                    project.findProperty("GPR_API_KEY") as String? ?: System.getenv("GPR_API_KEY")
+            }
+        }
     }
 }
