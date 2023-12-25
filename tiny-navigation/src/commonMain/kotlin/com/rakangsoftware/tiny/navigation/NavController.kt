@@ -16,8 +16,9 @@ import androidx.compose.runtime.remember
  */
 class NavController {
 
-    private var backStackScreens: MutableList<String> = mutableListOf()
-    private var currentScreen: MutableState<String?> = mutableStateOf(null)
+    private var startDestination = ""
+    private var backStackScreens: MutableList<NavBackStackEntry> = mutableListOf()
+    private var currentScreen: MutableState<NavBackStackEntry?> = mutableStateOf(null)
     private val targetHashMap: HashMap<String, NavigationTarget> = hashMapOf()
     private var isBackNavigation: MutableState<Boolean> = mutableStateOf(false)
 
@@ -33,23 +34,34 @@ class NavController {
         val content: @Composable () -> Unit
     )
 
+    private fun findTarget(route: String): NavigationTarget? = targetHashMap[route]
+
+    data class NavBackStackEntry(
+        val target: NavigationTarget
+    )
+
     /**
      * Sets the start destination of the navigation.
      */
     internal fun setStartDestination(startDestination: String) {
-        currentScreen.value = startDestination
+        this.startDestination = startDestination
     }
 
     /**
      * Navigates to the specified route.
      */
-    fun navigate(route: String) {
-        if (route == currentScreen.value) {
+    fun navigate(route: String, builder: NavOptionBuilder.() -> Unit = {}) {
+        if (route == currentScreen.value?.target?.route) {
             return
         }
-        isBackNavigation.value = false
-        backStackScreens.add(route)
-        currentScreen.value = route
+
+        findTarget(route)?.let { navigationTarget ->
+            val entry = NavBackStackEntry(target = navigationTarget)
+
+            isBackNavigation.value = false
+            backStackScreens.add(entry)
+            currentScreen.value = entry
+        }
     }
 
     /**
@@ -89,11 +101,17 @@ class NavController {
      */
     @Composable
     operator fun invoke() {
-        val current by currentScreen
-        val isBackNav by isBackNavigation
-        val navigationTarget = targetHashMap[current] ?: return
+        var current = currentScreen.value
+        if (current == null) {
+            navigate(startDestination)
+            current = currentScreen.value
+        }
+        current?.let {
+            val isBackNav by isBackNavigation
+            val navigationTarget = targetHashMap[it.target.route] ?: return
 
-        AnimatedNavigationContent(navigationTarget, isBackNav)
+            AnimatedNavigationContent(navigationTarget, isBackNav)
+        }
     }
 }
 
@@ -123,6 +141,6 @@ private fun AnimatedNavigationContent(
             }
         }
     ) { targetState ->
-        targetState.content.invoke()
+        targetState.content()
     }
 }

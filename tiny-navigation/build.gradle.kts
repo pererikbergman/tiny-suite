@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "com.rakangsoftware.tiny"
-version = "0.0.1"
+version = "0.0.2"
 
 kotlin {
     androidTarget {
