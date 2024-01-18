@@ -29,7 +29,7 @@ fun NavigationGraphBuilder.composable(
     exitTransition: ExitTransition = DefaultAnimations.exitTransition,
     popEnterTransition: EnterTransition = DefaultAnimations.popEnterTransition,
     popExitTransition: ExitTransition = DefaultAnimations.popExitTransition,
-    content: @Composable () -> Unit
+    content: @Composable (NavController.NavBackStackEntry) -> Unit // HERE
 ) {
     require(route.isNotBlank()) { "Invalid route: Route cannot be blank." }
 
@@ -42,3 +42,4 @@ fun NavigationGraphBuilder.composable(
         content
     )
 }
+

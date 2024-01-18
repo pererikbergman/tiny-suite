@@ -11,7 +11,7 @@ import com.rakangsoftware.tiny.navigation.deeplink.DeeplinkHandler
  * @param builder The builder block to define the navigation graph.
  */
 @Composable
-fun NavigationHost(
+fun NavHost(
     navController: NavController,
     startDestination: String,
     builder: NavigationGraphBuilder.() -> Unit

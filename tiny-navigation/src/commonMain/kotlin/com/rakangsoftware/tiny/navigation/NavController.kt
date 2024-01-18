@@ -31,14 +31,19 @@ class NavController {
         val exitTransition: ExitTransition,
         val popEnterTransition: EnterTransition,
         val popExitTransition: ExitTransition,
-        val content: @Composable () -> Unit
+        val content: @Composable (NavBackStackEntry) -> Unit // HERE
     )
 
     private fun findTarget(route: String): NavigationTarget? = targetHashMap[route]
 
     data class NavBackStackEntry(
-        val target: NavigationTarget
-    )
+        val target: NavigationTarget,
+        var bundle: TinyBundle = TinyBundle(),
+    ) {
+        fun add(params: Map<String, Any>) {
+            this.bundle.add(params)
+        }
+    }
 
     /**
      * Sets the start destination of the navigation.
@@ -51,17 +56,28 @@ class NavController {
      * Navigates to the specified route.
      */
     fun navigate(route: String, builder: NavOptionBuilder.() -> Unit = {}) {
-        if (route == currentScreen.value?.target?.route) {
-            return
-        }
+        val result = getTemplateFormValueString(route) ?: return
 
-        findTarget(route)?.let { navigationTarget ->
+        val (routeTemplate, params) = result
+
+        findTarget(routeTemplate)?.let { navigationTarget ->
             val entry = NavBackStackEntry(target = navigationTarget)
+            entry.add(params)
 
             isBackNavigation.value = false
             backStackScreens.add(entry)
             currentScreen.value = entry
         }
+    }
+
+    private fun getTemplateFormValueString(route: String): Pair<String, Map<String, Any>>? {
+        targetHashMap.forEach { (key, value) ->
+            getParamsOrNull(route, value.route)?.let {
+                return Pair(value.route, it)
+            }
+        }
+
+        return null
     }
 
     /**
@@ -85,14 +101,19 @@ class NavController {
         exitTransition: ExitTransition,
         popEnterTransition: EnterTransition,
         popExitTransition: ExitTransition,
-        content: @Composable () -> Unit
+        content: @Composable (NavBackStackEntry) -> Unit // HERE
     ) {
         if (targetHashMap.containsKey(route)) {
             return
         }
 
         targetHashMap[route] = NavigationTarget(
-            route, enterTransition, exitTransition, popEnterTransition, popExitTransition, content
+            route,
+            enterTransition,
+            exitTransition,
+            popEnterTransition,
+            popExitTransition,
+            content
         )
     }
 
@@ -108,9 +129,11 @@ class NavController {
         }
         current?.let {
             val isBackNav by isBackNavigation
-            val navigationTarget = targetHashMap[it.target.route] ?: return
 
-            AnimatedNavigationContent(navigationTarget, isBackNav)
+            AnimatedNavigationContent(it, isBackNav)
+
+//            val navigationTarget = it.target
+//            navigationTarget.content(it) // HERE
         }
     }
 }
@@ -128,9 +151,11 @@ fun rememberNavController(): NavController {
  */
 @Composable
 private fun AnimatedNavigationContent(
-    navigationTarget: NavController.NavigationTarget,
+    navBackStackEntry: NavController.NavBackStackEntry,
     isBackNav: Boolean
 ) {
+    val navigationTarget = navBackStackEntry.target
+
     AnimatedContent(
         targetState = navigationTarget,
         transitionSpec = {
@@ -141,6 +166,50 @@ private fun AnimatedNavigationContent(
             }
         }
     ) { targetState ->
-        targetState.content()
+        val stableValue = remember(targetState) {
+            targetState
+        }
+        stableValue.content(navBackStackEntry) // HERE
     }
+
+//    navigationTarget.content(navBackStackEntry)
 }
+
+fun getParamsOrNull(valueString: String, templateString: String): Map<String, Any>? {
+    if (valueString.isBlank() || templateString.isBlank()) return null
+
+    // Split the strings into path segments
+    val valueSegments = valueString.split("/")
+    val templateSegments = templateString.split("/")
+
+    // Check if segments count matches
+    if (valueSegments.size != templateSegments.size) return null
+
+    val resultMap = mutableMapOf<String, Any>()
+
+    // Iterate through the template segments
+    for (i in templateSegments.indices) {
+        val templateSegment = templateSegments[i]
+        val valueSegment = valueSegments[i]
+
+        if (isStatic(templateSegment)) {
+            // Static segment: directly compare with value segment
+            if (templateSegment != valueSegment) return null
+        } else {
+            // Dynamic segment: extract key and map it to the value segment
+            val key = templateSegment.trim('{', '}')
+            resultMap[key] = getAsPrimitiveType(valueSegment)
+        }
+    }
+
+    return resultMap
+}
+
+fun isStatic(value: String): Boolean =
+    !(value.startsWith("{") && value.endsWith("}"))
+
+fun getAsPrimitiveType(value: String): Any =
+    value.toIntOrNull()
+        ?: value.toDoubleOrNull()
+        ?: value.toBooleanStrictOrNull()
+        ?: value
