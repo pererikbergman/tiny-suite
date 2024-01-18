@@ -16,7 +16,7 @@ File: `shared/build.gradle.kts`
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("com.rakangsoftware.tiny:tiny-navigation:0.0.2")
+            implementation("com.rakangsoftware.tiny:tiny-navigation:0.0.3")
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material)
@@ -31,7 +31,9 @@ File: `Navigation.kt`
 ```kotlin
 sealed class Screen(val route: String) {
     data object Splash : Screen("splash")
-    data object Home : Screen("home")
+    data object Home : Screen("home/{id}") {
+        fun getRoute(id: Long) = "home/$id"
+    }
 }
 
 @Composable
@@ -67,6 +69,7 @@ fun NavigationGraphBuilder.addSplashScreen(controller: NavController) {
 
 fun NavigationGraphBuilder.addHomeScreen(controller: NavController) {
     composable(Screen.Home.route) {
+        val id = it.bundle.getInt("id")
         HomeScreen()
     }
 }
