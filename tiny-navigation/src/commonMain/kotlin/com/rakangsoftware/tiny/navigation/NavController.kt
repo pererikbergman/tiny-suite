@@ -3,6 +3,7 @@ package com.rakangsoftware.tiny.navigation
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -86,9 +87,7 @@ class NavController {
     fun navigateBack() {
         if (backStackScreens.isNotEmpty()) {
             isBackNavigation.value = true
-            currentScreen.value = backStackScreens.last()
-            backStackScreens.remove(currentScreen.value)
-            currentScreen.value = backStackScreens.last()
+            currentScreen.value = backStackScreens.removeLast()
         }
     }
 
@@ -122,18 +121,24 @@ class NavController {
      */
     @Composable
     operator fun invoke() {
-        var current = currentScreen.value
-        if (current == null) {
+        if (currentScreen.value == null) {
             navigate(startDestination)
-            current = currentScreen.value
         }
-        current?.let {
+
+        currentScreen.value?.let {
             val isBackNav by isBackNavigation
-
-            AnimatedNavigationContent(it, isBackNav)
-
-//            val navigationTarget = it.target
-//            navigationTarget.content(it) // HERE
+            AnimatedContent(
+                targetState = it.target,
+                transitionSpec = {
+                    if (isBackNav) {
+                        it.target.popEnterTransition togetherWith it.target.popExitTransition
+                    } else {
+                        it.target.enterTransition togetherWith it.target.exitTransition
+                    }
+                }
+            ) { targetState ->
+                targetState.content(it)
+            }
         }
     }
 }
@@ -144,35 +149,6 @@ class NavController {
 @Composable
 fun rememberNavController(): NavController {
     return remember { NavController() }
-}
-
-/**
- * Composable function to handle animated content during navigation.
- */
-@Composable
-private fun AnimatedNavigationContent(
-    navBackStackEntry: NavController.NavBackStackEntry,
-    isBackNav: Boolean
-) {
-    val navigationTarget = navBackStackEntry.target
-
-    AnimatedContent(
-        targetState = navigationTarget,
-        transitionSpec = {
-            if (isBackNav) {
-                navigationTarget.popEnterTransition togetherWith navigationTarget.popExitTransition
-            } else {
-                navigationTarget.enterTransition togetherWith navigationTarget.exitTransition
-            }
-        }
-    ) { targetState ->
-        val stableValue = remember(targetState) {
-            targetState
-        }
-        stableValue.content(navBackStackEntry) // HERE
-    }
-
-//    navigationTarget.content(navBackStackEntry)
 }
 
 fun getParamsOrNull(valueString: String, templateString: String): Map<String, Any>? {

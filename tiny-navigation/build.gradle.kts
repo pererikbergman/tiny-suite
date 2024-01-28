@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "com.rakangsoftware.tiny"
-version = "0.0.3"
+version = "0.0.4"
 
 kotlin {
     androidTarget {
@@ -53,7 +53,6 @@ kotlin {
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
-
         iosMain.dependencies {
 
         }
