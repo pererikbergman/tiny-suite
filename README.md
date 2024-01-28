@@ -16,7 +16,7 @@ File: `shared/build.gradle.kts`
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("com.rakangsoftware.tiny:tiny-navigation:0.0.3")
+            implementation("com.rakangsoftware.tiny:tiny-navigation:0.0.4")
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material)
